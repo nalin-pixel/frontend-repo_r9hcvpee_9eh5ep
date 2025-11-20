@@ -4,20 +4,23 @@ import SignalCard from './components/SignalCard'
 import Toolbar from './components/Toolbar'
 
 function App() {
-  const [signals, setSignals] = useState([])
+  const [freeSignals, setFreeSignals] = useState([])
+  const [vipSignals, setVipSignals] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [count, setCount] = useState(12)
+  const [freeCount, setFreeCount] = useState(12)
+  const [vipCount, setVipCount] = useState(6)
   const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
   const fetchSignals = async () => {
     try {
       setLoading(true)
       setError('')
-      const res = await fetch(`${baseUrl}/api/predictions?count=${count}`)
+      const res = await fetch(`${baseUrl}/api/predictions/segmented?free_count=${freeCount}&vip_count=${vipCount}`)
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       const data = await res.json()
-      setSignals(data.betting_signals || [])
+      setFreeSignals(data.free || [])
+      setVipSignals(data.vip || [])
     } catch (e) {
       setError(e.message)
     } finally {
@@ -28,7 +31,7 @@ function App() {
   useEffect(() => {
     fetchSignals()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count])
+  }, [freeCount, vipCount])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
@@ -37,7 +40,13 @@ function App() {
         <Header />
 
         <div className="bg-slate-900/50 border border-blue-500/20 rounded-2xl p-5 md:p-6 shadow-xl">
-          <Toolbar count={count} onCountChange={setCount} onRefresh={fetchSignals} />
+          <Toolbar
+            freeCount={freeCount}
+            vipCount={vipCount}
+            onFreeCountChange={setFreeCount}
+            onVipCountChange={setVipCount}
+            onRefresh={fetchSignals}
+          />
 
           <div className="mt-6">
             {loading && (
@@ -49,10 +58,30 @@ function App() {
               </div>
             )}
             {!loading && !error && (
-              <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {signals.map((s, idx) => (
-                  <SignalCard key={idx} signal={s} />
-                ))}
+              <div className="space-y-8">
+                <section>
+                  <div className="flex items-end justify-between gap-3">
+                    <h2 className="text-xl font-bold text-white">Free Tips</h2>
+                    <span className="text-xs text-blue-200/70">{freeSignals.length} tips</span>
+                  </div>
+                  <div className="mt-3 grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {freeSignals.map((s, idx) => (
+                      <SignalCard key={`free-${idx}`} signal={s} />
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <div className="flex items-end justify-between gap-3">
+                    <h2 className="text-xl font-bold text-white">VIP Tips</h2>
+                    <span className="text-xs text-violet-200/80">{vipSignals.length} tips</span>
+                  </div>
+                  <div className="mt-3 grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {vipSignals.map((s, idx) => (
+                      <SignalCard key={`vip-${idx}`} signal={s} />
+                    ))}
+                  </div>
+                </section>
               </div>
             )}
           </div>
