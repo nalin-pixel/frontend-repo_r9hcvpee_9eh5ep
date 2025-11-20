@@ -22,7 +22,9 @@ function App() {
     try {
       setLoading(true)
       setError('')
-      const res = await fetch(`${baseUrl}/api/predictions/segmented?free_count=${freeCount}&vip_count=${vipCount}`)
+      const vipToken = localStorage.getItem('vipToken')
+      const headers = vipToken ? { Authorization: `Bearer ${vipToken}` } : {}
+      const res = await fetch(`${baseUrl}/api/predictions/segmented?free_count=${freeCount}&vip_count=${vipCount}`,{ headers })
       if (!res.ok) throw new Error(`Request failed: ${res.status}`)
       const data = await res.json()
       setFreeSignals(data.free || [])
@@ -37,18 +39,22 @@ function App() {
   useEffect(() => {
     fetchSignals()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freeCount, vipCount])
+  }, [freeCount, vipCount, vipActive])
 
-  const handleActivatePlan = (planName) => {
-    // In a real app, redirect to checkout. Here we just unlock locally.
-    localStorage.setItem('vipActive', 'true')
-    setVipActive(true)
+  const handleActivatePlan = () => {
+    // VIP activation handled inside PricingModal; we just sync state here
+    const active = localStorage.getItem('vipActive') === 'true'
+    setVipActive(active)
     setPricingOpen(false)
+    fetchSignals()
   }
 
   const vipStatusPill = useMemo(() => (
-    <span className={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-md border ${vipActive ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' : 'bg-violet-500/10 text-violet-300 border-violet-400/30'}`}>
-      {vipActive ? 'Active' : 'Locked'}
+    <span className={`relative text-[10px] uppercase tracking-wide px-2 py-1 rounded-md border ${vipActive ? 'bg-emerald-500/10 text-emerald-200 border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/30' : 'bg-violet-500/10 text-violet-300 border-violet-400/30'} overflow-hidden`}> 
+      {vipActive && (
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/20 to-emerald-400/0 blur-sm animate-[pulse_2s_ease-in-out_infinite]" />
+      )}
+      <span className="relative z-10">{vipActive ? 'Active' : 'Locked'}</span>
     </span>
   ), [vipActive])
 
@@ -103,7 +109,7 @@ function App() {
                     <div className="mt-3 grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                       {vipSignals.map((s, idx) => (
                         <div key={`vip-${idx}`} className="relative">
-                          <div className="absolute -top-1 -left-1 text-[10px] px-2 py-0.5 rounded-md bg-violet-600/20 text-violet-300 border border-violet-500/30">VIP</div>
+                          <div className="absolute -top-1 -left-1 text-[10px] px-2 py-0.5 rounded-md bg-violet-600/20 text-violet-300 border border-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.45)]">VIP</div>
                           <SignalCard signal={s} />
                         </div>
                       ))}
@@ -118,7 +124,7 @@ function App() {
                             </div>
                             <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-[2px] flex items-center justify-center">
                               <div className="text-center p-4">
-                                <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-violet-600/20 text-violet-300 border border-violet-500/30">🔒</div>
+                                <div className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-violet-600/20 text-violet-300 border border-violet-500/30 shadow-[0_0_16px_rgba(139,92,246,0.4)]">🔒</div>
                                 <div className="mt-2 text-white font-semibold">VIP locked</div>
                                 <div className="text-xs text-slate-300/80">Unlock to view all premium picks</div>
                               </div>
@@ -129,7 +135,7 @@ function App() {
                       <div className="mt-4 flex items-center justify-center">
                         <button
                           onClick={() => setPricingOpen(true)}
-                          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow transition-colors"
+                          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow transition-colors shadow-violet-600/30"
                         >
                           Unlock VIP Access
                         </button>
