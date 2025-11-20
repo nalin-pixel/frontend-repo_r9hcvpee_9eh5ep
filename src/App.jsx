@@ -9,7 +9,7 @@ function App() {
   const [vipSignals, setVipSignals] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [freeCount, setFreeCount] = useState(12)
+  const [freeCount, setFreeCount] = useState(6)
   const [vipCount, setVipCount] = useState(6)
   const [pricingOpen, setPricingOpen] = useState(false)
   const [vipActive, setVipActive] = useState(() => {
@@ -69,7 +69,7 @@ function App() {
 
           <div className="mt-6">
             {loading && (
-              <div className="text-center text-blue-200/80 py-14">Fetching today\'s predictions...</div>
+              <div className="text-center text-blue-200/80 py-14">Fetching today's predictions...</div>
             )}
             {error && (
               <div className="text-center text-rose-300 bg-rose-500/10 border border-rose-400/30 rounded-lg p-4">
